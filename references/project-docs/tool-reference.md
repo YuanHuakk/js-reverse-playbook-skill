@@ -399,7 +399,6 @@ so returned values have to JSON-serializable.
 - `includeDynamic`
 - `enableRuntimeSampler`
 - `enableAdvancedDynamicAnalysis`
-- `includeSensitiveEvidence`
 - `maxSensitiveEvidenceLength`
 - `targetParams`
 - `targetParamSampleWindowMs`

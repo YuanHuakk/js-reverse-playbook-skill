@@ -11,7 +11,7 @@ MCP server provides the browser/debugging tools it drives.
 ## Install
 
 ```bash
-npx skills add YuanHuakk/js-reverse-playbook
+npx skills add YuanHuakk/js-reverse-playbook-skill
 ```
 
 This installs the skill into your agent's skills directory (e.g.

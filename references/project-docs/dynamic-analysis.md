@@ -87,7 +87,7 @@ sampler 覆盖：
 - Canvas / WebGL / Audio / fonts 指纹入口
 - `eval` / `Function` / `Function.prototype.toString`
 
-默认只记录类型、目标、方法、载荷长度、调用栈和 async 关联，不记录明文敏感值。
+记录类型、目标、方法、载荷长度、调用栈和 async 关联；命中 `targetParams` 的字段还会附带明文证据。
 
 ### Step 3: Trace Target Params
 
@@ -162,21 +162,17 @@ sampler 覆盖：
 
 `snapshot_scope` 默认会做：
 
-- 敏感字段名脱敏
 - 字符串长度限制
 - scope 变量数量限制
 - 非自动暂停，必须由用户显式触发
 
-### Step 6: Export Sensitive Evidence
+### Step 6: 目标参数明文证据
 
-默认动态分析不输出 cookie、token、请求体明文。
-
-如果是授权会话，且确实需要保留目标参数明文证据，必须同时传入：
+命中 `targetParams` 的字段会直接输出明文证据，无需额外开关——逆向时这正是你要的真实值。可选 `maxSensitiveEvidenceLength` 限制单条长度（默认 2000；超出仅截断并标记 `truncated` + `originalLength`，不打码）。
 
 ```json
 {
   "targetParams": ["sign", "token"],
-  "includeSensitiveEvidence": true,
   "maxSensitiveEvidenceLength": 2000
 }
 ```
@@ -218,7 +214,7 @@ sampler 覆盖：
 - asyncId / parentAsyncId 异步链摘要
 - `snapshot_scope` 作用域快照
 - JSVM / WASM probe hint
-- 授权目标参数明文证据 opt-in 输出
+- 目标参数明文证据输出
 
 ### JS Hook 使用边界
 
@@ -256,14 +252,14 @@ sampler 覆盖：
 ## 默认安全边界
 
 - 高侵入 hook 具备，但必须显式启用，不进入默认采集链路。
-- cookie、token、请求体明文支持授权会话显式输出；只有传入 `targetParams` 且设置 `includeSensitiveEvidence: true` 时，才会写入 `advancedDynamicAnalysis.sensitiveEvidence`。
+- 命中 `targetParams` 的字段会把明文写入 `advancedDynamicAnalysis.sensitiveEvidence`（逆向所需的真实值），可用 `maxSensitiveEvidenceLength` 控制单条长度。
 - 断点暂停和 `snapshot_scope` 具备，但默认不暂停页面执行，必须通过 debugger 工具显式触发。
 - 参数算法还原具备定位、切片、采样、scope 快照、Node draft 和环境补丁 hint；不承诺所有站点所有算法都能零人工全自动破解。
 - JSVM/WASM 动态辅助具备信号识别和 probe 建议；完整还原走显式 debugger / hook 链路，不放进基础 `collect_code` 默认职责。
 
 ## 禁止事项
 
-- 未经用户显式开启就输出 cookie、token、请求体明文
+- 无差别导出整站 cookie / storage / 请求体（只输出命中 `targetParams` 的字段明文）
 - 默认启用高侵入 hook
 - 默认暂停页面执行
 - 把完整站点私有参数算法写进公开 case
@@ -332,8 +328,7 @@ sampler 覆盖：
   "includeInline": true,
   "enableRuntimeSampler": true,
   "enableAdvancedDynamicAnalysis": true,
-  "targetParams": ["sign", "token", "nonce", "timestamp", "qid", "workerSign", "wasmValue"],
-  "includeSensitiveEvidence": true
+  "targetParams": ["sign", "token", "nonce", "timestamp", "qid", "workerSign", "wasmValue"]
 }
 ```
 
