@@ -87,7 +87,9 @@
 | `new_page`                   | BrowserManager pages                                               | 当前页选择/导航                          | BrowserManager currentPage                           |
 | `select_page`                | BrowserManager pages                                               | 当前页选择/导航                          | BrowserManager currentPage                           |
 | `diff_env_requirements`      | 运行时失败信息 + 页面能力 + 证据输入（辅助补环境，不替代代理日志） | rebuild bundle/task artifacts            | Artifacts                                            |
-| `export_rebuild_bundle`      | 请求参数 + 当前上下文                                              | task artifact 文件                       | `artifacts/tasks/*`                                  |
+| `export_rebuild_bundle`      | 请求参数 + 当前上下文（`envBaseline=minimal\|jsdom`）              | task artifact 文件                       | `artifacts/tasks/*`                                  |
+| `run_rebuild`                | 已导出产物包                                                       | 运行输出 + 首个分歧点                    | stdout/stderr                                        |
+| `auto_patch_env`             | 已导出产物包（闭环：跑→读分歧→套注册表补丁→重跑，默认 ≤6 轮）      | 自动写回的 `env/env.js` + 收敛报告       | `artifacts/tasks/*`                                  |
 | `take_screenshot`            | 页面/元素渲染                                                      | 截图文件或响应附件                       | filesystem(optional)                                 |
 | `evaluate_script`            | 当前 frame runtime                                                 | 页面注入脚本                             | PreloadScript Registry                               |
 | `inject_preload_script`      | 当前 frame runtime                                                 | 页面注入脚本                             | PreloadScript Registry                               |

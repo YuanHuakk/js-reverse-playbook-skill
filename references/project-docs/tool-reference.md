@@ -23,13 +23,14 @@
   - [`select_page`](#select_page)
   - [`type_text`](#type_text)
   - [`wait_for_element`](#wait_for_element)
-- **[Network](#network)** (6 tools)
+- **[Network](#network)** (7 tools)
   - [`analyze_websocket_messages`](#analyze_websocket_messages)
   - [`get_network_request`](#get_network_request)
   - [`get_websocket_message`](#get_websocket_message)
   - [`get_websocket_messages`](#get_websocket_messages)
   - [`list_network_requests`](#list_network_requests)
   - [`list_websocket_connections`](#list_websocket_connections)
+  - [`replay_request`](#replay_request)
 - **[Debugging](#debugging)** (5 tools)
   - [`evaluate_script`](#evaluate_script)
   - [`get_console_message`](#get_console_message)
@@ -89,11 +90,11 @@
 
 ### `check_browser_health`
 
-**Description:** Check browser connectivity and active page readiness before running reverse workflows.
+**Description:** 在运行逆向工作流之前，检查浏览器连接状态和活动页面就绪情况。
 
 ### `click_element`
 
-**Description:** Click an element by selector.
+**Description:** 通过选择器点击一个元素。
 
 **Parameters:**
 
@@ -101,7 +102,7 @@
 
 ### `delete_session_state`
 
-**Description:** Delete one in-memory session snapshot by sessionId.
+**Description:** 按 sessionId 删除一个内存中的会话快照。
 
 **Parameters:**
 
@@ -109,7 +110,7 @@
 
 ### `dump_session_state`
 
-**Description:** Export a saved session snapshot as JSON, optionally writing to a file.
+**Description:** 将已保存的会话快照导出为 JSON，可选择写入文件。
 
 **Parameters:**
 
@@ -120,7 +121,7 @@
 
 ### `find_clickable_elements`
 
-**Description:** Find clickable buttons/links, optionally filtered by text.
+**Description:** 查找可点击的按钮/链接，可选按文本过滤。
 
 **Parameters:**
 
@@ -128,7 +129,7 @@
 
 ### `get_dom_structure`
 
-**Description:** Get DOM tree structure for current page.
+**Description:** 获取当前页面的 DOM 树结构。
 
 **Parameters:**
 
@@ -137,19 +138,19 @@
 
 ### `get_performance_metrics`
 
-**Description:** Get page performance metrics from Performance API.
+**Description:** 通过 Performance API 获取页面性能指标。
 
 ### `list_pages`
 
-**Description:** Get a list of pages open in the browser.
+**Description:** 获取浏览器中已打开的页面列表。
 
 ### `list_session_states`
 
-**Description:** List all saved session snapshots in memory.
+**Description:** 列出内存中所有已保存的会话快照。
 
 ### `load_session_state`
 
-**Description:** Load a session snapshot from JSON string or file into memory.
+**Description:** 从 JSON 字符串或文件加载会话快照到内存。
 
 **Parameters:**
 
@@ -160,7 +161,7 @@
 
 ### `navigate_page`
 
-**Description:** Navigates the currently selected page to a URL, or performs back/forward/reload navigation. Waits for DOMContentLoaded event (not full page load). Default timeout is 10 seconds.
+**Description:** 将当前选中的页面导航到某个 URL，或执行后退/前进/重新加载操作。等待 DOMContentLoaded 事件（而非整页加载完成）。默认超时为 10 秒。
 
 **Parameters:**
 
@@ -171,7 +172,7 @@
 
 ### `new_page`
 
-**Description:** Creates a new page and navigates to the specified URL. Waits for DOMContentLoaded event (not full page load). Default timeout is 10 seconds.
+**Description:** 创建一个新页面并导航到指定 URL。等待 DOMContentLoaded 事件（而非整页加载完成）。默认超时为 10 秒。
 
 **Parameters:**
 
@@ -180,7 +181,7 @@
 
 ### `query_dom`
 
-**Description:** Query one or multiple elements by CSS selector.
+**Description:** 通过 CSS 选择器查询一个或多个元素。
 
 **Parameters:**
 
@@ -190,7 +191,7 @@
 
 ### `restore_session_state`
 
-**Description:** Restore a previously saved session snapshot to current page.
+**Description:** 将先前保存的会话快照恢复到当前页面。
 
 **Parameters:**
 
@@ -200,7 +201,7 @@
 
 ### `save_session_state`
 
-**Description:** Save current page session state (cookies/localStorage/sessionStorage) into in-memory snapshot.
+**Description:** 将当前页面的会话状态（cookies/localStorage/sessionStorage）保存为内存快照。
 
 **Parameters:**
 
@@ -211,7 +212,7 @@
 
 ### `select_page`
 
-**Description:** Select a page as a context for future tool calls.
+**Description:** 选择一个页面作为后续工具调用的上下文。
 
 **Parameters:**
 
@@ -219,7 +220,7 @@
 
 ### `type_text`
 
-**Description:** Type text into an input element.
+**Description:** 向输入元素中输入文本。
 
 **Parameters:**
 
@@ -229,7 +230,7 @@
 
 ### `wait_for_element`
 
-**Description:** Wait for selector to appear.
+**Description:** 等待选择器对应的元素出现。
 
 **Parameters:**
 
@@ -240,7 +241,7 @@
 
 ### `analyze_websocket_messages`
 
-**Description:** Analyzes WebSocket messages and groups them by pattern/fingerprint. Essential for understanding binary/protobuf message types in live streaming scenarios. Returns statistics and sample indices for each message type.
+**Description:** 分析 WebSocket 消息并按模式/指纹对其分组。在直播流场景中理解二进制/protobuf 消息类型时尤为关键。为每种消息类型返回统计信息和样本索引。
 
 **Parameters:**
 
@@ -249,7 +250,7 @@
 
 ### `get_network_request`
 
-**Description:** Gets a network request by an optional reqid, if omitted returns the currently selected request in the DevTools Network panel.
+**Description:** 按可选的 reqid 获取某个网络请求；省略时返回 DevTools 网络面板中当前选中的请求。
 
 **Parameters:**
 
@@ -257,7 +258,7 @@
 
 ### `get_websocket_message`
 
-**Description:** Gets a single WebSocket message by its frame index. Use get_websocket_messages or analyze_websocket_messages first to find the frame index.
+**Description:** 通过 frame 索引获取单条 WebSocket 消息。请先使用 get_websocket_messages 或 analyze_websocket_messages 找到 frame 索引。
 
 **Parameters:**
 
@@ -266,7 +267,7 @@
 
 ### `get_websocket_messages`
 
-**Description:** Gets messages for a WebSocket connection. IMPORTANT: For binary/protobuf messages (like live streaming), use analyze_websocket_messages FIRST to understand message types, then use groupId parameter to filter specific types. Default mode shows summary only.
+**Description:** 获取某个 WebSocket 连接的消息。重要：对于二进制/protobuf 消息（如直播流），请先使用 analyze_websocket_messages 了解消息类型，再通过 groupId 参数筛选特定类型。默认模式仅显示摘要。
 
 **Parameters:**
 
@@ -279,7 +280,7 @@
 
 ### `list_network_requests`
 
-**Description:** List all requests for the currently selected page since the last navigation.
+**Description:** 列出当前选中页面自上次导航以来的所有网络请求。
 
 **Parameters:**
 
@@ -290,7 +291,7 @@
 
 ### `list_websocket_connections`
 
-**Description:** List all WebSocket connections. After getting wsid, use analyze_websocket_messages(wsid) FIRST to understand message patterns before viewing individual messages.
+**Description:** 列出所有 WebSocket 连接。获取到 wsid 后，请先使用 analyze_websocket_messages(wsid) 了解消息模式，再查看单条消息。
 
 **Parameters:**
 
@@ -299,12 +300,26 @@
 - `urlFilter`
 - `includePreservedConnections`
 
+### `replay_request`
+
+**Description:** 在页面上下文中（携带真实 cookie/origin）重新发送一个 HTTP 请求，可选改写 url/method/headers/body，并返回响应。用于端到端验证已复现的签名或参数：以通过 reqid 捕获的请求（来自 list_network_requests）为基础，覆盖其中的签名字段。
+
+**Parameters:**
+
+- `reqid`
+- `url`
+- `method`
+- `headers`
+- `body`
+- `credentials`
+- `maxBodyChars`
+
 ## Debugging
 
 ### `evaluate_script`
 
-**Description:** Evaluate a JavaScript function inside the currently selected page. Returns the response as JSON
-so returned values have to JSON-serializable.
+**Description:** 在当前选中的页面内执行一个 JavaScript 函数。返回结果以 JSON 形式给出，
+因此返回值必须可被 JSON 序列化。
 
 **Parameters:**
 
@@ -312,7 +327,7 @@ so returned values have to JSON-serializable.
 
 ### `get_console_message`
 
-**Description:** Gets a console message by its ID. You can get all messages by calling list_console_messages.
+**Description:** 按 ID 获取单条控制台消息。可通过调用 list_console_messages 获取全部消息。
 
 **Parameters:**
 
@@ -320,7 +335,7 @@ so returned values have to JSON-serializable.
 
 ### `inject_preload_script`
 
-**Description:** Register a JavaScript snippet that will run on future document loads before page scripts execute. Use this for preload hooks, environment patches, and early instrumentation.
+**Description:** 注册一段 JavaScript 代码，使其在后续文档加载时、页面脚本执行之前运行。可用于预加载脚本的钩子、环境修补以及早期插桩。
 
 **Parameters:**
 
@@ -328,7 +343,7 @@ so returned values have to JSON-serializable.
 
 ### `list_console_messages`
 
-**Description:** List all console messages for the currently selected page since the last navigation.
+**Description:** 列出当前选中页面自上次导航以来的所有控制台消息。
 
 **Parameters:**
 
@@ -339,7 +354,7 @@ so returned values have to JSON-serializable.
 
 ### `take_screenshot`
 
-**Description:** Take a screenshot of the page or element.
+**Description:** 对页面或元素进行截图。
 
 **Parameters:**
 
@@ -352,7 +367,7 @@ so returned values have to JSON-serializable.
 
 ### `analyze_target`
 
-**Description:** One-shot reverse workflow: collect code, run security/crypto analysis, optional deobfuscation, and hook timeline correlation.
+**Description:** 一键式逆向流程：采集代码、执行安全与加密分析、可选反混淆，并关联 hook 时间线。
 
 **Parameters:**
 
@@ -371,7 +386,7 @@ so returned values have to JSON-serializable.
 
 ### `break_on_xhr`
 
-**Description:** Sets a breakpoint that triggers when an XHR/Fetch request URL contains the specified string.
+**Description:** 设置一个断点，当 XHR/Fetch 请求的 URL 包含指定字符串时触发。
 
 **Parameters:**
 
@@ -379,7 +394,7 @@ so returned values have to JSON-serializable.
 
 ### `check_llm_health`
 
-**Description:** Check LLM provider configuration, optionally with a live chat probe.
+**Description:** 检查 LLM 服务商配置，可选发起一次实时对话探测。
 
 **Parameters:**
 
@@ -387,7 +402,7 @@ so returned values have to JSON-serializable.
 
 ### `collect_code`
 
-**Description:** Collect JavaScript code from a page with smart modes (summary/priority/incremental/full).
+**Description:** 从页面采集 JavaScript 代码，支持智能模式（summary/priority/incremental/full）。
 
 **Parameters:**
 
@@ -410,7 +425,7 @@ so returned values have to JSON-serializable.
 
 ### `collection_diff`
 
-**Description:** Compare previous and current collected file summaries.
+**Description:** 对比前后两次采集到的文件摘要。
 
 **Parameters:**
 
@@ -420,7 +435,7 @@ so returned values have to JSON-serializable.
 
 ### `create_hook`
 
-**Description:** RECOMMENDED: Create hook script for function/fetch/xhr/property/cookie/websocket/eval/timer. Hooks run without pausing page execution and are the preferred approach over breakpoints for monitoring and interception.
+**Description:** 推荐：为 function/fetch/xhr/property/cookie/websocket/eval/timer 创建 hook 脚本。hook 在不暂停页面执行的情况下运行，相比断点是监控与拦截的首选方案。
 
 **Parameters:**
 
@@ -431,7 +446,7 @@ so returned values have to JSON-serializable.
 
 ### `deobfuscate_code`
 
-**Description:** AI-assisted JavaScript deobfuscation.
+**Description:** AI 辅助的 JavaScript 反混淆。
 
 **Parameters:**
 
@@ -442,7 +457,7 @@ so returned values have to JSON-serializable.
 
 ### `detect_crypto`
 
-**Description:** Detect cryptographic algorithms/libraries from JavaScript source.
+**Description:** 从 JavaScript 源码中检测加密算法与加密库。
 
 **Parameters:**
 
@@ -451,7 +466,7 @@ so returned values have to JSON-serializable.
 
 ### `evaluate_on_callframe`
 
-**Description:** Evaluates a JavaScript expression in the context of a specific call frame while paused. This allows you to inspect variables and execute code in the paused scope.
+**Description:** 在暂停时，于指定调用帧的上下文中执行一段 JavaScript 表达式。可借此查看变量并在暂停的作用域中执行代码。
 
 **Parameters:**
 
@@ -460,7 +475,7 @@ so returned values have to JSON-serializable.
 
 ### `export_session_report`
 
-**Description:** Export current reverse-engineering session as JSON or Markdown.
+**Description:** 将当前逆向会话导出为 JSON 或 Markdown。
 
 **Parameters:**
 
@@ -469,7 +484,7 @@ so returned values have to JSON-serializable.
 
 ### `find_in_script`
 
-**Description:** Finds a string in a specific script and returns its exact line/column position with surrounding context. Ideal for setting breakpoints in minified files where the entire code is on one line.
+**Description:** 在指定脚本中查找字符串，返回其精确的行/列位置以及周围上下文。非常适合在整段代码挤在一行的压缩文件中设置断点。
 
 **Parameters:**
 
@@ -481,7 +496,7 @@ so returned values have to JSON-serializable.
 
 ### `get_hook_data`
 
-**Description:** Get captured data for one hook or all hooks. Supports raw view and summary view for noise reduction.
+**Description:** 获取某个 hook 或全部 hook 捕获的数据。支持原始（raw）视图和用于降噪的摘要（summary）视图。
 
 **Parameters:**
 
@@ -491,7 +506,7 @@ so returned values have to JSON-serializable.
 
 ### `get_paused_info`
 
-**Description:** Gets information about the current paused state including call stack, current location, and scope variables. Use this after a breakpoint is hit to understand the execution context.
+**Description:** 获取当前暂停状态的信息，包括调用栈、当前位置和作用域变量。命中断点后用它来了解执行上下文。
 
 **Parameters:**
 
@@ -500,7 +515,7 @@ so returned values have to JSON-serializable.
 
 ### `get_request_initiator`
 
-**Description:** Gets the JavaScript call stack that initiated a network request. This helps trace which code triggered an API call.
+**Description:** 获取发起某个网络请求的 JavaScript 调用栈，便于追踪是哪段代码触发了 API 调用。
 
 **Parameters:**
 
@@ -512,7 +527,7 @@ so returned values have to JSON-serializable.
 
 ### `get_script_source`
 
-**Description:** Gets the source code of a JavaScript script by its script ID. Supports line range (for normal files) or character offset (for minified single-line files). Use list_scripts first to find the script ID.
+**Description:** 通过 scriptId 获取 JavaScript 脚本的源代码。支持按行号范围（普通文件）或字符偏移（压缩成单行的文件）读取。请先用 `list_scripts` 查找 scriptId。
 
 **Parameters:**
 
@@ -524,7 +539,7 @@ so returned values have to JSON-serializable.
 
 ### `get_storage`
 
-**Description:** Gets browser storage data including cookies, localStorage, and sessionStorage.
+**Description:** 获取浏览器存储数据，包括 cookies、localStorage 和 sessionStorage。
 
 **Parameters:**
 
@@ -533,7 +548,7 @@ so returned values have to JSON-serializable.
 
 ### `hook_function`
 
-**Description:** RECOMMENDED for reverse engineering: Hooks a JavaScript function to log its calls, arguments, and return values without pausing execution. More reliable than breakpoints for automated workflows. Use this as the default approach for monitoring functions.
+**Description:** 逆向推荐方式：hook 一个 JavaScript 函数，在不暂停执行的情况下记录它的调用、参数和返回值。在自动化流程中比断点更可靠。监控函数时请将其作为默认方式。
 
 **Parameters:**
 
@@ -545,7 +560,7 @@ so returned values have to JSON-serializable.
 
 ### `inject_hook`
 
-**Description:** Inject an existing hook into the current page.
+**Description:** 将已有的 hook 注入到当前页面。
 
 **Parameters:**
 
@@ -553,7 +568,7 @@ so returned values have to JSON-serializable.
 
 ### `inject_stealth`
 
-**Description:** Inject anti-detection stealth scripts to current page.
+**Description:** 向当前页面注入反检测 stealth 脚本。
 
 **Parameters:**
 
@@ -561,7 +576,7 @@ so returned values have to JSON-serializable.
 
 ### `inspect_object`
 
-**Description:** Deeply inspects a JavaScript object, showing its properties, prototype chain, and methods. Useful for understanding object structure.
+**Description:** 深度检查一个 JavaScript 对象，展示它的属性、原型链和方法。便于理解对象结构。
 
 **Parameters:**
 
@@ -572,15 +587,15 @@ so returned values have to JSON-serializable.
 
 ### `list_breakpoints`
 
-**Description:** Lists all active breakpoints in the current debugging session.
+**Description:** 列出当前调试会话中所有生效的断点。
 
 ### `list_hooks`
 
-**Description:** Lists all active function hooks.
+**Description:** 列出所有生效的函数 hook。
 
 ### `list_scripts`
 
-**Description:** Lists all JavaScript scripts loaded in the current page. Returns script ID, URL, and source map information. Use this to find scripts before setting breakpoints or searching.
+**Description:** 列出当前页面已加载的所有 JavaScript 脚本，返回 scriptId、URL 和 source map 信息。在设置断点或搜索之前用它来查找脚本。
 
 **Parameters:**
 
@@ -588,15 +603,15 @@ so returned values have to JSON-serializable.
 
 ### `list_stealth_features`
 
-**Description:** List available stealth feature toggles.
+**Description:** 列出可用的 stealth 功能开关。
 
 ### `list_stealth_presets`
 
-**Description:** List available stealth presets.
+**Description:** 列出可用的 stealth 预设。
 
 ### `monitor_events`
 
-**Description:** Monitors DOM events on a specified element or window. Events will be logged to console.
+**Description:** 监控指定元素或 window 上的 DOM 事件，事件将记录到控制台。
 
 **Parameters:**
 
@@ -610,11 +625,11 @@ so returned values have to JSON-serializable.
 
 ### `pause`
 
-**Description:** Pauses JavaScript execution at the current point. Use this to interrupt running code.
+**Description:** 在当前位置暂停 JavaScript 执行，用于中断正在运行的代码。
 
 ### `record_reverse_evidence`
 
-**Description:** Append structured reverse-engineering evidence to a task artifact log.
+**Description:** 将结构化的逆向证据追加写入任务产物日志。
 
 **Parameters:**
 
@@ -631,7 +646,7 @@ so returned values have to JSON-serializable.
 
 ### `remove_breakpoint`
 
-**Description:** Removes a breakpoint by its ID. Use list_breakpoints to see active breakpoints.
+**Description:** 根据 ID 移除断点。可用 `list_breakpoints` 查看当前生效的断点。
 
 **Parameters:**
 
@@ -639,7 +654,7 @@ so returned values have to JSON-serializable.
 
 ### `remove_hook`
 
-**Description:** Remove a hook by id.
+**Description:** 按 id 移除一个 hook。
 
 **Parameters:**
 
@@ -647,7 +662,7 @@ so returned values have to JSON-serializable.
 
 ### `remove_xhr_breakpoint`
 
-**Description:** Removes an XHR/Fetch breakpoint.
+**Description:** 移除一个 XHR/Fetch 断点。
 
 **Parameters:**
 
@@ -655,11 +670,11 @@ so returned values have to JSON-serializable.
 
 ### `resume`
 
-**Description:** Resumes JavaScript execution after being paused at a breakpoint. Execution continues until the next breakpoint or completion.
+**Description:** 在断点暂停后继续执行 JavaScript，一直运行到下一个断点或执行结束。
 
 ### `risk_panel`
 
-**Description:** Build a combined risk score from analyzer, crypto detector and hook signals.
+**Description:** 综合分析器、加密检测器与 hook 信号构建统一的风险评分。
 
 **Parameters:**
 
@@ -671,7 +686,7 @@ so returned values have to JSON-serializable.
 
 ### `search_in_scripts`
 
-**Description:** Search in collected script cache with regex pattern.
+**Description:** 使用正则模式在已采集的脚本缓存中搜索。
 
 **Parameters:**
 
@@ -681,7 +696,7 @@ so returned values have to JSON-serializable.
 
 ### `search_in_sources`
 
-**Description:** Searches for a string or regex pattern in all loaded JavaScript sources. Returns matching lines with script ID, URL, and line number. Use get_script_source with startLine/endLine to view full context around matches.
+**Description:** 在所有已加载的 JavaScript 源码中搜索字符串或正则表达式，返回匹配行及其 scriptId、URL 和行号。可用 `get_script_source` 配合 startLine/endLine 查看匹配处的完整上下文。
 
 **Parameters:**
 
@@ -695,7 +710,7 @@ so returned values have to JSON-serializable.
 
 ### `set_breakpoint`
 
-**Description:** Sets a breakpoint in a JavaScript file at the specified line. The breakpoint will trigger when the code executes. NOTE: Prefer hook_function or create_hook for monitoring function calls — breakpoints require pause/resume coordination and are error-prone in automated workflows. Use breakpoints only when you need to inspect local variables inside a function.
+**Description:** 在 JavaScript 文件的指定行设置断点，代码执行到该处时会触发。注意：监控函数调用时优先使用 `hook_function` 或 `create_hook`——断点需要配合暂停/继续执行，在自动化流程中容易出错。仅在需要查看函数内部局部变量时才使用断点。
 
 **Parameters:**
 
@@ -707,7 +722,7 @@ so returned values have to JSON-serializable.
 
 ### `set_breakpoint_on_text`
 
-**Description:** Sets a breakpoint on specific code (function name, statement, etc.) by searching for it and automatically determining the exact position. Works with both normal and minified files. NOTE: Prefer hook_function for monitoring function calls — it captures args/results without pausing execution. Use this only when you need to inspect local variables at a specific code location.
+**Description:** 通过搜索指定代码（函数名、语句等）并自动定位其精确位置来设置断点，普通文件和压缩文件都适用。注意：监控函数调用时优先使用 `hook_function`——它能在不暂停执行的情况下捕获参数/返回值。仅在需要查看某个具体代码位置的局部变量时才使用本工具。
 
 **Parameters:**
 
@@ -718,7 +733,7 @@ so returned values have to JSON-serializable.
 
 ### `set_user_agent`
 
-**Description:** Set custom user-agent for active page.
+**Description:** 为当前活动页面设置自定义 user-agent。
 
 **Parameters:**
 
@@ -726,7 +741,7 @@ so returned values have to JSON-serializable.
 
 ### `snapshot_scope`
 
-**Description:** Captures a bounded and redacted scope snapshot while JavaScript execution is paused. Use after a breakpoint hit to record local/closure/this/global variable names, types and safe preview values for dynamic data-flow analysis.
+**Description:** 在 JavaScript 执行暂停时，捕获一份有数量限制且已脱敏的作用域快照。命中断点后用它记录 local/closure/this/global 变量的名称、类型和安全预览值，用于动态数据流分析。
 
 **Parameters:**
 
@@ -741,19 +756,19 @@ so returned values have to JSON-serializable.
 
 ### `step_into`
 
-**Description:** Steps into the next function call. Use this to enter and debug function bodies.
+**Description:** 步入下一个函数调用，用于进入并调试函数体。
 
 ### `step_out`
 
-**Description:** Steps out of the current function, continuing until the function returns. Use this to quickly exit a function.
+**Description:** 步出当前函数，一直执行到该函数返回。用它快速退出一个函数。
 
 ### `step_over`
 
-**Description:** Steps over to the next statement, treating function calls as a single step. Use this to move through code without entering function bodies.
+**Description:** 单步跳过到下一条语句，把函数调用当作一步执行。用它在不进入函数体的情况下逐行执行代码。
 
 ### `stop_monitor`
 
-**Description:** Stops an event monitor.
+**Description:** 停止一个事件监控。
 
 **Parameters:**
 
@@ -761,7 +776,7 @@ so returned values have to JSON-serializable.
 
 ### `summarize_code`
 
-**Description:** Summarize one code file, multiple files, or project-level context.
+**Description:** 对单个代码文件、多个文件或项目级上下文进行摘要。
 
 **Parameters:**
 
@@ -772,7 +787,7 @@ so returned values have to JSON-serializable.
 
 ### `trace_function`
 
-**Description:** Traces calls to a function by its name in the source code. Works for ANY function including module-internal functions (webpack/rollup bundled). Uses "logpoints" (conditional breakpoints) to log arguments without pausing execution.
+**Description:** 根据源代码中的函数名追踪对该函数的调用。适用于任意函数，包括模块内部函数（webpack/rollup 打包的）。使用"日志点"（条件断点）在不暂停执行的情况下记录参数。
 
 **Parameters:**
 
@@ -789,7 +804,7 @@ so returned values have to JSON-serializable.
 
 ### `understand_code`
 
-**Description:** Analyze code structure/business/security with AI + static analysis.
+**Description:** 结合 AI 与静态分析解析代码的结构、业务逻辑与安全性。
 
 **Parameters:**
 
@@ -799,7 +814,7 @@ so returned values have to JSON-serializable.
 
 ### `unhook_function`
 
-**Description:** Removes a previously installed function hook.
+**Description:** 移除先前安装的函数 hook。
 
 **Parameters:**
 

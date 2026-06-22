@@ -12,8 +12,8 @@
 执行顺序：
 
 1. 在页面里确认目标请求、脚本、函数
-2. 导出本地复现包
-3. 运行 `env/entry.js`
+2. 导出本地复现包（`envBaseline` 默认 `minimal`；DOM 密集且非强检测目标可选 `jsdom`）
+3. 运行 `env/entry.js`（或用 `auto_patch_env` 闭环自动补机械性宿主缺口，默认 ≤6 轮）
 4. 优先读取代理 env log
 5. 记录当前 `first divergence`
 6. 按“最小因果单元”做一个补丁决策

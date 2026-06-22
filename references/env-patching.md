@@ -8,3 +8,10 @@
 - 常见项：`navigator`、`webdriver`、`crypto`、`atob/btoa`、`TextEncoder`。
 - 避免一次性全局模拟浏览器。
 - 没有代理日志或没有 `first divergence` 记录时，不允许直接补宿主。
+
+## 基线与自动闭环
+
+- `export_rebuild_bundle` 的 `envBaseline`：默认 `minimal`（零依赖手搓，强检测目标首选）；`jsdom`（DOM 基线 + core-js + L2 保真覆盖层，DOM 密集目标提速）。
+- 切 `jsdom` 后，指纹敏感项仍以 L2 覆盖层的页面证据为准，不要信 jsdom 默认值。
+- `auto_patch_env`：闭环自动补——跑→读 first divergence→套注册表补丁→重跑，默认 ≤6 轮。
+- 自动闭环只补低风险宿主缺口；遇 `fetch`/`XHR`/自定义检测等注册表外缺口会停下交回人工。

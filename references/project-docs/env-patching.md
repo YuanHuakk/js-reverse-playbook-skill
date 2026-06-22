@@ -158,6 +158,33 @@
 | `Illegal invocation` / brand check 失败                                                    | 宿主建模方式错误 | 先修对象形态或 this 绑定，再决定是否补值      | 不要把 brand-sensitive 对象直接套 Proxy 乱包   |
 | `crypto.subtle` / `TextEncoder` 缺失                                                       | 平台 API 缺失    | 补最小平台 API 外壳或 polyfill                | 不要臆造算法结果                               |
 
+## 补环境基线选择（minimal vs jsdom）
+
+`export_rebuild_bundle(autoGenerate)` 提供 `envBaseline` 两挡基线，**默认 `minimal`**：
+
+| 基线      | 内容                                       | 适用                                     | 代价 / 风险                                                                                   |
+| --------- | ------------------------------------------ | ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `minimal` | 零依赖手搓宿主壳 + 最小 storage shim       | 强指纹 / 环境检测类目标、需要逐项可溯源  | 手补慢，但每项都可追溯页面证据，保真度最高                                                    |
+| `jsdom`   | jsdom DOM 基线 + `core-js` + L2 保真覆盖层 | DOM 操作密集、非强检测类目标，想快速铺底 | 引入第三方依赖；jsdom 的 navigator / native toString 是“假浏览器特征”，对强检测目标可能被识破 |
+
+`jsdom` 基线生成的 `env.js` 是**分层**的，不是裸用 jsdom：
+
+- **L1 DOM 基线层**：`new JSDOM(...)` 一键提供 spec 兼容的 `window/document/navigator/location/history/screen`。
+- **L2 保真覆盖层**：在 jsdom 之上回贴页面证据并覆盖其假特征——`navigator.webdriver=false`、用 node `webcrypto` 覆盖 jsdom 的 `crypto.subtle`、按 `capture.json` 注入 cookie / storage。
+
+选型原则：**默认 `minimal`；只有当 first divergence 反复落在大量 DOM 读写、且目标不做强环境检测时，才切 `jsdom` 省去手搓。** 切到 jsdom 后，指纹敏感项仍以 L2 覆盖层（页面证据）为准，不要直接信任 jsdom 的默认值。
+
+## 自动补环境闭环（auto_patch_env）
+
+`auto_patch_env` 把「跑 → 读 first divergence → 套补丁 → 重跑」收成闭环，用同一张补丁注册表（与上方「补丁判定表」「`diff_env_requirements`」同源）自动写回 `env.js`：
+
+- 循环：运行 `env/entry.js` → `extractFirstError` 取首个分歧点 → 注册表匹配 → 幂等追加补丁（带 `// [auto_patch_env] <capability>` marker）→ 重跑。
+- **收敛上限默认 6 轮**（对齐「超过 6 个补丁未收敛就回浏览器取证」）；命中 `expected` 或跑通无报错即停。
+- **只自动补注册表内的低风险宿主缺口**：`window/self/global/document/navigator/location/history/screen/localStorage/sessionStorage/crypto/atob/btoa/TextEncoder/TextDecoder`。
+- 遇到注册表外的错误（`fetch`/`XHR`/站点自定义检测/`Illegal invocation` 等）**会停下并交回人工**，输出 `status` 与 finalError，由人回浏览器取证。
+
+它**不替代**代理诊断层与页面取证：自动闭环负责快速吃掉机械性的宿主缺口，把人留给真正需要证据判断的分歧点。没有产物包（先 `export_rebuild_bundle`）不能调用。
+
 ## 负面示例
 
 以下做法都属于盲补，不应出现：
