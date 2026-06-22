@@ -31,33 +31,45 @@
   - [`list_network_requests`](#list_network_requests)
   - [`list_websocket_connections`](#list_websocket_connections)
   - [`replay_request`](#replay_request)
-- **[Debugging](#debugging)** (5 tools)
+- **[Debugging](#debugging)** (7 tools)
   - [`evaluate_script`](#evaluate_script)
   - [`get_console_message`](#get_console_message)
   - [`inject_preload_script`](#inject_preload_script)
   - [`list_console_messages`](#list_console_messages)
+  - [`list_frames`](#list_frames)
+  - [`select_frame`](#select_frame)
   - [`take_screenshot`](#take_screenshot)
-- **[JS Reverse Engineering](#js-reverse-engineering)** (47 tools)
+- **[JS Reverse Engineering](#js-reverse-engineering)** (66 tools)
   - [`analyze_target`](#analyze_target)
+  - [`auto_patch_env`](#auto_patch_env)
   - [`break_on_xhr`](#break_on_xhr)
+  - [`bypass_anti_debug`](#bypass_anti_debug)
   - [`check_llm_health`](#check_llm_health)
   - [`collect_code`](#collect_code)
   - [`collection_diff`](#collection_diff)
   - [`create_hook`](#create_hook)
+  - [`crypto_verify`](#crypto_verify)
   - [`deobfuscate_code`](#deobfuscate_code)
   - [`detect_crypto`](#detect_crypto)
+  - [`diff_env_requirements`](#diff_env_requirements)
   - [`evaluate_on_callframe`](#evaluate_on_callframe)
+  - [`export_rebuild_bundle`](#export_rebuild_bundle)
   - [`export_session_report`](#export_session_report)
   - [`find_in_script`](#find_in_script)
+  - [`get_bytecode_trace`](#get_bytecode_trace)
+  - [`get_coverage`](#get_coverage)
   - [`get_hook_data`](#get_hook_data)
   - [`get_paused_info`](#get_paused_info)
   - [`get_request_initiator`](#get_request_initiator)
+  - [`get_reverse_control`](#get_reverse_control)
+  - [`get_reverse_evidence`](#get_reverse_evidence)
   - [`get_script_source`](#get_script_source)
   - [`get_storage`](#get_storage)
   - [`hook_function`](#hook_function)
   - [`inject_hook`](#inject_hook)
   - [`inject_stealth`](#inject_stealth)
   - [`inspect_object`](#inspect_object)
+  - [`inspect_wasm`](#inspect_wasm)
   - [`list_breakpoints`](#list_breakpoints)
   - [`list_hooks`](#list_hooks)
   - [`list_scripts`](#list_scripts)
@@ -65,26 +77,35 @@
   - [`list_stealth_presets`](#list_stealth_presets)
   - [`monitor_events`](#monitor_events)
   - [`pause`](#pause)
+  - [`query_ast`](#query_ast)
+  - [`query_reverse_channel`](#query_reverse_channel)
   - [`record_reverse_evidence`](#record_reverse_evidence)
   - [`remove_breakpoint`](#remove_breakpoint)
   - [`remove_hook`](#remove_hook)
   - [`remove_xhr_breakpoint`](#remove_xhr_breakpoint)
   - [`resume`](#resume)
   - [`risk_panel`](#risk_panel)
+  - [`run_rebuild`](#run_rebuild)
   - [`search_in_scripts`](#search_in_scripts)
   - [`search_in_sources`](#search_in_sources)
   - [`set_breakpoint`](#set_breakpoint)
   - [`set_breakpoint_on_text`](#set_breakpoint_on_text)
+  - [`set_bytecode_target`](#set_bytecode_target)
+  - [`set_reverse_category`](#set_reverse_category)
   - [`set_user_agent`](#set_user_agent)
   - [`snapshot_scope`](#snapshot_scope)
+  - [`start_coverage`](#start_coverage)
   - [`step_into`](#step_into)
   - [`step_out`](#step_out)
   - [`step_over`](#step_over)
   - [`stop_monitor`](#stop_monitor)
   - [`summarize_code`](#summarize_code)
+  - [`tail_reverse_channel`](#tail_reverse_channel)
+  - [`toggle_nodebugger`](#toggle_nodebugger)
   - [`trace_function`](#trace_function)
   - [`understand_code`](#understand_code)
   - [`unhook_function`](#unhook_function)
+  - [`watch_property`](#watch_property)
 
 ## Navigation automation
 
@@ -352,6 +373,18 @@
 - `types`
 - `includePreservedMessages`
 
+### `list_frames`
+
+**Description:** 以树状结构列出当前页面中的所有 frame（包括 iframe），显示 frame 索引、名称和 URL。使用 select_frame 可将执行上下文切换到指定 frame。
+
+### `select_frame`
+
+**Description:** 选择一个 frame（通过 list_frames 中的索引）作为 evaluate_script、hook_function、inspect_object 等在页面中运行 JavaScript 的工具的执行上下文。
+
+**Parameters:**
+
+- `frameIdx`
+
 ### `take_screenshot`
 
 **Description:** 对页面或元素进行截图。
@@ -384,6 +417,19 @@
 - `autoReplayActions`
 - `collect`
 
+### `auto_patch_env`
+
+**Description:** 闭环自动补环境：反复运行 rebuild 包 → 抓取 first divergence → 按补丁注册表自动写回 env.js → 重跑，直到复现成功、跑通无报错，或达到迭代上限（默认 6，符合「超过 6 个补丁未收敛就回浏览器取证」）。仅自动修补注册表内的低风险宿主缺口（window/self/document/navigator/location/history/screen/localStorage/sessionStorage/crypto/atob/btoa/TextEncoder/TextDecoder）；遇到注册表外的错误（fetch/XHR/自定义检测等）会停下并交回人工。需先 export_rebuild_bundle 生成产物包。
+
+**Parameters:**
+
+- `taskDir`
+- `entryRelativePath`
+- `envRelativePath`
+- `maxIterations`
+- `timeout`
+- `expected`
+
 ### `break_on_xhr`
 
 **Description:** 设置一个断点，当 XHR/Fetch 请求的 URL 包含指定字符串时触发。
@@ -391,6 +437,14 @@
 **Parameters:**
 
 - `url`
+
+### `bypass_anti_debug`
+
+**Description:** 消除常见的反调试防护，使调试/观察得以进行：在引擎层面跳过所有 debugger 暂停（破解 `debugger;` 陷阱），并注册一个预加载补丁，在后续页面加载时丢弃仅用于触发 debugger 的定时器循环。传入 off=true 可恢复正常的暂停行为。
+
+**Parameters:**
+
+- `off`
 
 ### `check_llm_health`
 
@@ -444,6 +498,22 @@
 - `description`
 - `action`
 
+### `crypto_verify`
+
+**Description:** 在 Node 中计算标准加密原语（md5/sha*/hmac-*/base64/hex/AES-CBC），并可选地与观测到的值进行比对——用于确认复现的签名或加密方案。
+
+**Parameters:**
+
+- `op`
+- `input`
+- `key`
+- `iv`
+- `inputEncoding`
+- `keyEncoding`
+- `ivEncoding`
+- `outputEncoding`
+- `expected`
+
 ### `deobfuscate_code`
 
 **Description:** AI 辅助的 JavaScript 反混淆。
@@ -464,6 +534,15 @@
 - `code`
 - `useAI`
 
+### `diff_env_requirements`
+
+**Description:** 将本地运行时的失败与观察到的浏览器能力进行对比，并给出下一步的环境修补建议。
+
+**Parameters:**
+
+- `runtimeError`
+- `observedCapabilities`
+
 ### `evaluate_on_callframe`
 
 **Description:** 在暂停时，于指定调用帧的上下文中执行一段 JavaScript 表达式。可借此查看变量并在暂停的作用域中执行代码。
@@ -472,6 +551,29 @@
 
 - `expression`
 - `frameIndex`
+
+### `export_rebuild_bundle`
+
+**Description:** 根据观察到的逆向证据导出本地 Node 复现产物包。
+
+**Parameters:**
+
+- `taskId`
+- `taskSlug`
+- `targetUrl`
+- `goal`
+- `autoGenerate`
+- `envBaseline`
+- `targetKeywords`
+- `targetUrlPatterns`
+- `targetFunctionNames`
+- `targetActionDescription`
+- `maxEvidenceItems`
+- `entryCode`
+- `envCode`
+- `polyfillsCode`
+- `capture`
+- `notes`
 
 ### `export_session_report`
 
@@ -493,6 +595,26 @@
 - `contextChars`
 - `occurrence`
 - `caseSensitive`
+
+### `get_bytecode_trace`
+
+**Description:** 把 side channel 中连续的 bytecode hook 行重建为 jsvmp 指令流（按 origin 聚合相邻字节码段，每段含解析后的 off/op 及全部字段）。可按 origin 子串过滤。
+
+**Parameters:**
+
+- `origin`
+- `maxSegments`
+
+### `get_coverage`
+
+**Description:** 收集自 start_coverage 以来累积的 JS 执行覆盖率，报告实际运行过的函数，按脚本分组并按调用次数排序。返回相对上一次 get_coverage 调用的增量。
+
+**Parameters:**
+
+- `urlFilter`
+- `maxScripts`
+- `maxFunctionsPerScript`
+- `stop`
 
 ### `get_hook_data`
 
@@ -524,6 +646,18 @@
 - `taskSlug`
 - `targetUrl`
 - `goal`
+
+### `get_reverse_control`
+
+**Description:** 读取并展示当前 control 文件的全部状态（所有 key=value 行）。
+
+### `get_reverse_evidence`
+
+**Description:** 聚合 side channel 取证：统计各 category 计数、各 origin 计数，便于快速定位魔改内核观测到的指纹/绕过行为分布。
+
+**Parameters:**
+
+- `topOrigins`
 
 ### `get_script_source`
 
@@ -568,11 +702,12 @@
 
 ### `inject_stealth`
 
-**Description:** 向当前页面注入反检测 stealth 脚本。
+**Description:** 向当前页面注入反检测 stealth 脚本。连接魔改 Chromium 内核时自动降级，跳过内核 C++ hook 已覆盖的维度（可用 forceAll 强制全量注入）。
 
 **Parameters:**
 
 - `preset`
+- `forceAll`
 
 ### `inspect_object`
 
@@ -584,6 +719,15 @@
 - `depth`
 - `showMethods`
 - `showPrototype`
+
+### `inspect_wasm`
+
+**Description:** 检查页面实例化的 WebAssembly 模块。action="install" 会 hook WebAssembly.instantiate 以记录导出/导入（请在 WASM 运行之前调用——如果它在加载时实例化则需重新加载）；action="report" 列出捕获的模块及其导出和导入的名称/类型。
+
+**Parameters:**
+
+- `action`
+- `max`
 
 ### `list_breakpoints`
 
@@ -626,6 +770,31 @@
 ### `pause`
 
 **Description:** 在当前位置暂停 JavaScript 执行，用于中断正在运行的代码。
+
+### `query_ast`
+
+**Description:** 对脚本（通过 scriptId 或原始代码）执行结构化 AST 查询。kind 取值："calls"（对某个被调用者的调用表达式）、"members"（成员访问，如 localStorage.getItem）、"functions"（函数声明/表达式）、"strings"（匹配某个正则的字符串字面量）。在定位签名/加密逻辑时比文本搜索更精确。
+
+**Parameters:**
+
+- `scriptId`
+- `code`
+- `kind`
+- `name`
+- `pattern`
+- `max`
+
+### `query_reverse_channel`
+
+**Description:** 查询魔改内核 side channel 日志（31 类 hook）。可按 category（可多选）、origin 子串、时间范围、limit 过滤。返回最新优先的结构化条目。
+
+**Parameters:**
+
+- `categories`
+- `origin`
+- `fromTs`
+- `toTs`
+- `limit`
 
 ### `record_reverse_evidence`
 
@@ -684,6 +853,17 @@
 - `hookId`
 - `topN`
 
+### `run_rebuild`
+
+**Description:** 在 Node 中运行已导出的复现产物包，报告产出的值以及首个分歧点。在 export_rebuild_bundle 之后使用：它会执行 <taskDir>/env/entry.js，捕获 stdout（结果）和首个运行时错误（stderr）。ReferenceError/TypeError 正是下一个需要修补的环境缺口。可选地将输出与期望值进行比对。
+
+**Parameters:**
+
+- `taskDir`
+- `entryRelativePath`
+- `timeout`
+- `expected`
+
 ### `search_in_scripts`
 
 **Description:** 使用正则模式在已采集的脚本缓存中搜索。
@@ -731,6 +911,23 @@
 - `occurrence`
 - `condition`
 
+### `set_bytecode_target`
+
+**Description:** 设置 K4 字节码 trace 目标（写控制文件的 target= 行，如 target=et_f.js@90400）。传空字符串则清空 trace。
+
+**Parameters:**
+
+- `spec`
+
+### `set_reverse_category`
+
+**Description:** 开关魔改内核的一个或多个 hook category（写控制文件，如 audio=1/font=0；1=开 0=关）。保留控制文件中的其它行不动。
+
+**Parameters:**
+
+- `categories`
+- `enabled`
+
 ### `set_user_agent`
 
 **Description:** 为当前活动页面设置自定义 user-agent。
@@ -753,6 +950,10 @@
 - `taskSlug`
 - `targetUrl`
 - `goal`
+
+### `start_coverage`
+
+**Description:** 启动精确的 JS 执行覆盖率，用于定位签名/加密代码。重要：只有在本次调用之后编译的脚本才会被插桩——请在目标页面加载之前调用 start_coverage（随后再 navigate_page），或者之后重新加载已打开的页面。然后触发相应行为，再调用 get_coverage 查看哪些函数被执行。
 
 ### `step_into`
 
@@ -784,6 +985,22 @@
 - `code`
 - `url`
 - `files`
+
+### `tail_reverse_channel`
+
+**Description:** 返回 side channel 日志最近 N 条记录（最新优先），用于实时观察魔改内核当前的 hook 输出。
+
+**Parameters:**
+
+- `n`
+
+### `toggle_nodebugger`
+
+**Description:** 开关魔改内核的无限 debugger 绕过（写控制文件的 nodebugger= 行，1=绕过 0=不绕过）。
+
+**Parameters:**
+
+- `enabled`
 
 ### `trace_function`
 
@@ -819,3 +1036,14 @@
 **Parameters:**
 
 - `hookId`
+
+### `watch_property`
+
+**Description:** 通过点分路径监视对象属性（如 window.config.token、navigator.userAgent）。action="install" 会用 getter/setter 包装该属性，记录每次读/写及其调用栈（设置 pause=true 可在访问时进入 debugger 暂停）；action="report" 列出捕获到的访问。请在该属性被访问之前安装——如果它在加载时被读取则需重新加载。
+
+**Parameters:**
+
+- `path`
+- `action`
+- `pause`
+- `max`
