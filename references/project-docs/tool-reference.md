@@ -39,7 +39,7 @@
   - [`list_frames`](#list_frames)
   - [`select_frame`](#select_frame)
   - [`take_screenshot`](#take_screenshot)
-- **[JS Reverse Engineering](#js-reverse-engineering)** (66 tools)
+- **[JS Reverse Engineering](#js-reverse-engineering)** (64 tools)
   - [`analyze_target`](#analyze_target)
   - [`auto_patch_env`](#auto_patch_env)
   - [`break_on_xhr`](#break_on_xhr)
@@ -49,36 +49,38 @@
   - [`collection_diff`](#collection_diff)
   - [`create_hook`](#create_hook)
   - [`crypto_verify`](#crypto_verify)
+  - [`decrypt_calls_in_page`](#decrypt_calls_in_page)
   - [`deobfuscate_code`](#deobfuscate_code)
   - [`detect_crypto`](#detect_crypto)
   - [`diff_env_requirements`](#diff_env_requirements)
+  - [`disassemble_wasm`](#disassemble_wasm)
   - [`evaluate_on_callframe`](#evaluate_on_callframe)
   - [`export_rebuild_bundle`](#export_rebuild_bundle)
   - [`export_session_report`](#export_session_report)
   - [`find_in_script`](#find_in_script)
-  - [`get_bytecode_trace`](#get_bytecode_trace)
   - [`get_coverage`](#get_coverage)
   - [`get_hook_data`](#get_hook_data)
   - [`get_paused_info`](#get_paused_info)
   - [`get_request_initiator`](#get_request_initiator)
-  - [`get_reverse_control`](#get_reverse_control)
-  - [`get_reverse_evidence`](#get_reverse_evidence)
   - [`get_script_source`](#get_script_source)
   - [`get_storage`](#get_storage)
+  - [`hook_crypto_apis`](#hook_crypto_apis)
   - [`hook_function`](#hook_function)
   - [`inject_hook`](#inject_hook)
   - [`inject_stealth`](#inject_stealth)
   - [`inspect_object`](#inspect_object)
   - [`inspect_wasm`](#inspect_wasm)
+  - [`instrument_jsvmp`](#instrument_jsvmp)
   - [`list_breakpoints`](#list_breakpoints)
   - [`list_hooks`](#list_hooks)
   - [`list_scripts`](#list_scripts)
   - [`list_stealth_features`](#list_stealth_features)
   - [`list_stealth_presets`](#list_stealth_presets)
   - [`monitor_events`](#monitor_events)
+  - [`neutralize_debugger`](#neutralize_debugger)
   - [`pause`](#pause)
   - [`query_ast`](#query_ast)
-  - [`query_reverse_channel`](#query_reverse_channel)
+  - [`reconstruct_jsvmp_trace`](#reconstruct_jsvmp_trace)
   - [`record_reverse_evidence`](#record_reverse_evidence)
   - [`remove_breakpoint`](#remove_breakpoint)
   - [`remove_hook`](#remove_hook)
@@ -90,8 +92,6 @@
   - [`search_in_sources`](#search_in_sources)
   - [`set_breakpoint`](#set_breakpoint)
   - [`set_breakpoint_on_text`](#set_breakpoint_on_text)
-  - [`set_bytecode_target`](#set_bytecode_target)
-  - [`set_reverse_category`](#set_reverse_category)
   - [`set_user_agent`](#set_user_agent)
   - [`snapshot_scope`](#snapshot_scope)
   - [`start_coverage`](#start_coverage)
@@ -100,8 +100,6 @@
   - [`step_over`](#step_over)
   - [`stop_monitor`](#stop_monitor)
   - [`summarize_code`](#summarize_code)
-  - [`tail_reverse_channel`](#tail_reverse_channel)
-  - [`toggle_nodebugger`](#toggle_nodebugger)
   - [`trace_function`](#trace_function)
   - [`understand_code`](#understand_code)
   - [`unhook_function`](#unhook_function)
@@ -514,6 +512,15 @@
 - `outputEncoding`
 - `expected`
 
+### `decrypt_calls_in_page`
+
+**Description:** 页面内活解密去混淆:用目标页面里已加载的活解密函数还原 `decryptName(...)` 调用,无需重建解密器(node-vm 的 sojson/ob 重建失败时的兜底)。前置:页面已执行过目标脚本,使解密函数全局可达。babel 在 node 侧,只把解密调用经 evaluate 丢进页面求值后替换回字面量。
+
+**Parameters:**
+
+- `code`
+- `decryptName`
+
 ### `deobfuscate_code`
 
 **Description:** AI 辅助的 JavaScript 反混淆。
@@ -542,6 +549,16 @@
 
 - `runtimeError`
 - `observedCapabilities`
+
+### `disassemble_wasm`
+
+**Description:** 把 WASM 二进制反汇编成可读的 wat 文本(基于 wabt)。逆向 WASM 承载的加密/签名逻辑时的第一步。输入 base64 编码的 wasm 字节,或一个 .wasm URL(由 MCP 进程 fetch)。可与 inspect_wasm 配合使用。
+
+**Parameters:**
+
+- `base64`
+- `url`
+- `maxChars`
 
 ### `evaluate_on_callframe`
 
@@ -596,15 +613,6 @@
 - `occurrence`
 - `caseSensitive`
 
-### `get_bytecode_trace`
-
-**Description:** 把 side channel 中连续的 bytecode hook 行重建为 jsvmp 指令流（按 origin 聚合相邻字节码段，每段含解析后的 off/op 及全部字段）。可按 origin 子串过滤。
-
-**Parameters:**
-
-- `origin`
-- `maxSegments`
-
 ### `get_coverage`
 
 **Description:** 收集自 start_coverage 以来累积的 JS 执行覆盖率，报告实际运行过的函数，按脚本分组并按调用次数排序。返回相对上一次 get_coverage 调用的增量。
@@ -647,18 +655,6 @@
 - `targetUrl`
 - `goal`
 
-### `get_reverse_control`
-
-**Description:** 读取并展示当前 control 文件的全部状态（所有 key=value 行）。
-
-### `get_reverse_evidence`
-
-**Description:** 聚合 side channel 取证：统计各 category 计数、各 origin 计数，便于快速定位魔改内核观测到的指纹/绕过行为分布。
-
-**Parameters:**
-
-- `topOrigins`
-
 ### `get_script_source`
 
 **Description:** 通过 scriptId 获取 JavaScript 脚本的源代码。支持按行号范围（普通文件）或字符偏移（压缩成单行的文件）读取。请先用 `list_scripts` 查找 scriptId。
@@ -679,6 +675,15 @@
 
 - `type`
 - `filter`
+
+### `hook_crypto_apis`
+
+**Description:** 一键 hook 常见编码/加密/(可选)定时 API（JSON.parse·stringify、atob/btoa、encode·decodeURI(Component)、escape/unescape、WebCrypto…），记录调用参数与调用栈，用于快速定位加密/签名发生处。复用 create_hook 体系（含 toString 隐身），数据用 get_hook_data 读取。
+
+**Parameters:**
+
+- `groups`
+- `extra`
 
 ### `hook_function`
 
@@ -702,12 +707,11 @@
 
 ### `inject_stealth`
 
-**Description:** 向当前页面注入反检测 stealth 脚本。连接魔改 Chromium 内核时自动降级，跳过内核 C++ hook 已覆盖的维度（可用 forceAll 强制全量注入）。
+**Description:** 向当前页面注入反检测 stealth 脚本。
 
 **Parameters:**
 
 - `preset`
-- `forceAll`
 
 ### `inspect_object`
 
@@ -728,6 +732,18 @@
 
 - `action`
 - `max`
+
+### `instrument_jsvmp`
+
+**Description:** jsvmp 插桩 trace：在脚本中定位解释器 dispatcher（巨型 switch + 无限循环 + 索引判别式），给分发 switch 注入探针（判别式只求值一次、语义保持），产出插桩后的等价源码与探针引导片段。随后用请求拦截/setScriptSource 把页面脚本换成插桩源码，触发行为后用 evaluate_script 读回 window.<probe>Buffer，再调用 reconstruct_jsvmp_trace 重建指令流。
+
+**Parameters:**
+
+- `source`
+- `dispatcherStart`
+- `minCases`
+- `probeName`
+- `registerProbe`
 
 ### `list_breakpoints`
 
@@ -767,6 +783,14 @@
 - `targetUrl`
 - `goal`
 
+### `neutralize_debugger`
+
+**Description:** 外科手术式绕过 `debugger` 陷阱：对每个 `debugger` 语句位置下 condition=false 断点（等价 DevTools「Never pause here」），V8 静默跳过目标的 debugger。与 `bypass_anti_debug` 的 setSkipAllPauses 全跳过不同——本工具只中和 debugger，**保留你自己设的断点可用**，适合一边绕反调试一边下断点观察。已加载脚本立即处理，未来脚本自动处理。传 off=true 移除全部中和断点并恢复。
+
+**Parameters:**
+
+- `off`
+
 ### `pause`
 
 **Description:** 在当前位置暂停 JavaScript 执行，用于中断正在运行的代码。
@@ -784,17 +808,16 @@
 - `pattern`
 - `max`
 
-### `query_reverse_channel`
+### `reconstruct_jsvmp_trace`
 
-**Description:** 查询魔改内核 side channel 日志（31 类 hook）。可按 category（可多选）、origin 子串、时间范围、limit 过滤。返回最新优先的结构化条目。
+**Description:** 把 instrument_jsvmp 探针回传的 opcode 流（从 window.<probe>Buffer 读回）重建成结构化 jsvmp 指令流：opcode 直方图（热点 handler）、执行顺序序列、以及 opcode→handler 源码映射（提供 dispatcherSource 时）。
 
 **Parameters:**
 
-- `categories`
-- `origin`
-- `fromTs`
-- `toTs`
-- `limit`
+- `opcodes`
+- `dispatcherSource`
+- `maxSequence`
+- `minCases`
 
 ### `record_reverse_evidence`
 
@@ -911,23 +934,6 @@
 - `occurrence`
 - `condition`
 
-### `set_bytecode_target`
-
-**Description:** 设置 K4 字节码 trace 目标（写控制文件的 target= 行，如 target=et_f.js@90400）。传空字符串则清空 trace。
-
-**Parameters:**
-
-- `spec`
-
-### `set_reverse_category`
-
-**Description:** 开关魔改内核的一个或多个 hook category（写控制文件，如 audio=1/font=0；1=开 0=关）。保留控制文件中的其它行不动。
-
-**Parameters:**
-
-- `categories`
-- `enabled`
-
 ### `set_user_agent`
 
 **Description:** 为当前活动页面设置自定义 user-agent。
@@ -985,22 +991,6 @@
 - `code`
 - `url`
 - `files`
-
-### `tail_reverse_channel`
-
-**Description:** 返回 side channel 日志最近 N 条记录（最新优先），用于实时观察魔改内核当前的 hook 输出。
-
-**Parameters:**
-
-- `n`
-
-### `toggle_nodebugger`
-
-**Description:** 开关魔改内核的无限 debugger 绕过（写控制文件的 nodebugger= 行，1=绕过 0=不绕过）。
-
-**Parameters:**
-
-- `enabled`
 
 ### `trace_function`
 
